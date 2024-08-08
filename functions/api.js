@@ -5,25 +5,45 @@ const yahooFinance = require("yahoo-finance2").default; // NOTE the .default
 
 const app = express();
 const router = express.Router();
+app.use(express.json());
+
+const cors = require("cors");
+app.use(cors());
 
 router.get("/", (req, res) => {
   res.json({ message: "Hello World!" });
 });
 
-router.get("/api", (req, res) => {
-  res.json({ message: "Hello API!" });
-});
-router.get("/hist", async (req, res) => {
-  // const results = await yahooFinance.search("TCS.NS");
+router.post("/hist", async (req, res) => {
   try {
-    const hist = await yahooFinance.chart("TCS.NS", {
-      period1: "2024-08-06",
+    const { query } = req.body;
+    const hist = await yahooFinance.chart(query, {
+      period1: "2024-08-07",
+      // period2: "2024-08-07",
       interval: "1m",
     });
-    console.log(hist);
-    res.json(hist["quotes"]);
+
+    const localizedHist = hist["quotes"].map((item) => {
+      localizedDate = item["date"].toLocaleString();
+      console.log(localizedDate);
+      return { ...item, date: localizedDate };
+    });
+
+    res.json(localizedHist);
   } catch (error) {
-    res.json({ message: "There is an error" + error + "." });
+    res.json({ message: "error message: " + error });
+  }
+});
+
+router.post("/search", async (req, res) => {
+  try {
+    const { query } = req.body;
+    const searchresult = await yahooFinance.search(query);
+    console.log("searchresult", searchresult["Promise"]);
+    res.json(searchresult);
+  } catch (error) {
+    console.error("Error performing search:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
