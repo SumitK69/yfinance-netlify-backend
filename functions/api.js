@@ -17,15 +17,17 @@ router.get("/", (req, res) => {
 router.post("/hist", async (req, res) => {
   try {
     const { query } = req.body;
+    const current_date = new Date().toISOString().split("T")[0];
+    console.log("current_date", current_date);
+
     const hist = await yahooFinance.chart(query, {
-      period1: "2024-08-07",
+      period1: current_date,
       // period2: "2024-08-07",
       interval: "1m",
     });
 
     const localizedHist = hist["quotes"].map((item) => {
       localizedDate = item["date"].toLocaleString();
-      console.log(localizedDate);
       return { ...item, date: localizedDate };
     });
 
